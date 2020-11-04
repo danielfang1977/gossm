@@ -525,14 +525,22 @@ func findInstances(region string) (map[string][]string, error) {
 	for _, rv := range output.Reservations {
 		for _, inst := range rv.Instances {
 			name := ""
+			version := ""
+			prometheus := ""
+			asgname := ""
 			for _, tag := range inst.Tags {
 				if *tag.Key == "Name" {
 					name = *tag.Value
-					break
+				} else if *tag.Key == "prometheus" {
+					prometheus = *tag.Value
+				} else if *tag.Key == "aws:ec2launchtemplate:version" {
+					version = *tag.Value
+				} else if *tag.Key == "aws:autoscaling:groupName" {
+					asgname = *tag.Value
 				}
 			}
 
-			table[fmt.Sprintf("%s\t(%s)", name, *inst.InstanceId)] = []string{*inst.InstanceId, *inst.PublicDnsName}
+			table[fmt.Sprintf("%-20s|%-40s|%-20s|%-18s|%-18s|%-5s|%-30s|%-20s", name, asgname, *inst.InstanceId, *inst.PrivateIpAddress, *inst.Placement.AvailabilityZone, version, *inst.LaunchTime, prometheus)] = []string{*inst.InstanceId, *inst.PublicDnsName}
 		}
 	}
 	return table, nil
