@@ -215,13 +215,15 @@ func FindInstances(ctx context.Context, cfg aws.Config) (map[string]*Target, err
 			for _, rv := range output.Reservations {
 				for _, inst := range rv.Instances {
 					name := ""
+                    prometheus := ""
 					for _, tag := range inst.Tags {
 						if aws.ToString(tag.Key) == "Name" {
 							name = aws.ToString(tag.Value)
-							break
+                        } else if aws.ToString(tag.Key) == "prometheus" {
+                            prometheus = aws.ToString(tag.Value)
 						}
 					}
-					table[fmt.Sprintf("%s\t(%s)", name, *inst.InstanceId)] = &Target{
+					table[fmt.Sprintf("%-30s|%-20s|%-18s|%s", name, *inst.InstanceId, *inst.PrivateIpAddress, prometheus)] = &Target{
 						Name:          aws.ToString(inst.InstanceId),
 						PublicDomain:  aws.ToString(inst.PublicDnsName),
 						PrivateDomain: aws.ToString(inst.PrivateDnsName),
